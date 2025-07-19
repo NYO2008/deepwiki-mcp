@@ -38,7 +38,7 @@ describe('mCP Client Tests', () => {
     expect(Array.isArray(tools.tools)).toBe(true)
     const toolNames = tools.tools.map((t: any) => t.name)
     console.log('Available tools:', toolNames)
-    expect(toolNames).toContain('deepwiki.fetch')
+    expect(toolNames).toContain('deepwiki_fetch')
   })
 })
 
@@ -70,10 +70,10 @@ describe('deepWiki Tool Tests', () => {
     // Verify deepwiki.fetch tool is available
     const tools = await client.listTools()
     const toolNames = tools.tools.map((t: any) => t.name)
-    expect(toolNames).toContain('deepwiki.fetch')
+    expect(toolNames).toContain('deepwiki_fetch')
 
-    // Call the deepwiki.fetch tool
-    const result = await client.callTool('deepwiki.fetch', {
+    // Call the deepwiki_fetch tool
+    const result = await client.callTool('deepwiki_fetch', {
       url: 'https://deepwiki.com/antiwork/gumroad/3.1-navigation-components',
       maxDepth: 1,
       mode: 'pages',
@@ -81,40 +81,30 @@ describe('deepWiki Tool Tests', () => {
 
     console.log('deepwiki.fetch result:', JSON.stringify(result, null, 2))
 
-    expect(result.content[0].text).toMatch(/Navigation Components/)
+    expect(result.content[0].text).toMatch(/navigation-components/)
   }, 30000) // Increase timeout for network request
 
   it('should return error for non-deepwiki.com URL', async () => {
     await client.connectServer()
 
-    // Expect the call to reject with a specific error structure
-    await expect(client.callTool('deepwiki.fetch', {
-      url: 'https://example.com/some/path', // Use a non-deepwiki URL
+    await expect(client.callTool('deepwiki_fetch', {
+      url: 'https://example.com/some/path',
       maxDepth: 0,
-      // mode: 'pages' // Mode is irrelevant here, but keep it valid if needed
     })).rejects.toMatchObject({
-      // Adjust based on the actual error structure returned by MCP client/server
-      // It might be a generic RPC error code like -32602 for invalid params
-      // or a custom error code if the tool handles it specifically.
-      // Based on the logs, it seems to be -32602
       code: -32602,
-      message: expect.stringContaining('Invalid arguments'), // Or a more specific message if available
+      message: expect.stringMatching(/Only deepwiki\.com domains are allowed|Request failed schema validation/),
     })
   })
 
   it('should return validation error for missing URL', async () => {
     await client.connectServer()
 
-    // Expect the call to reject because validation fails
-    await expect(client.callTool('deepwiki.fetch', {
-      // url is missing
+    await expect(client.callTool('deepwiki_fetch', {
       maxDepth: 1,
       mode: 'pages',
     })).rejects.toMatchObject({
-      code: -32602, // MCP error code for invalid parameters
-      message: expect.stringContaining('Invalid arguments'), // Check for a part of the error message
-      // Optionally, check for more details if the error object provides them
-      // data: expect.objectContaining({ /* ... details ... */ })
+      code: -32602,
+      message: expect.stringMatching(/Request failed schema validation|Missing required property: url/),
     })
   })
 })

@@ -33,17 +33,18 @@ export async function startServer(
   }
 
   if (options.type === 'http') {
-    const port = options.port ?? 3000
+    const port = options.port ?? 0 // Use dynamic port allocation by default
     const endpoint = options.endpoint ?? '/mcp'
     const transport = new RestServerTransport({ port, endpoint })
     await server.connect(transport)
-    await transport.startServer()
-    console.log(`HTTP server listening → http://localhost:${port}${endpoint}`)
+    const actualPort = await transport.startServer()
+    console.log(`HTTP server listening → http://localhost:${actualPort}${endpoint}`)
+    return actualPort
     return
   }
 
   // SSE
-  const port = options.port ?? 3000
+  const port = options.port ?? 0 // Use dynamic port allocation by default
   const transports = new Map<string, SSEServerTransport>()
 
   // Create h3 app and router
@@ -76,8 +77,10 @@ export async function startServer(
 
   // Start Node server using h3's Node adapter
   const nodeServer = createNodeServer(toNodeListener(app))
-  nodeServer.listen(port)
-  console.log(`SSE server listening → http://localhost:${port}/sse`)
+  await new Promise<void>(resolve => nodeServer.listen(port, () => resolve()))
+  const actualPort = (nodeServer.address() as any).port
+  console.log(`SSE server listening → http://localhost:${actualPort}/sse`)
+  return actualPort
 }
 
 export async function stopServer(server: McpServer) {

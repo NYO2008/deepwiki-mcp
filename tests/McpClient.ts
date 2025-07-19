@@ -11,8 +11,10 @@ interface McpTestClientOptions {
 
 export class McpTestClient {
   private client: Client
-  private transport: StdioClientTransport | undefined
+  private transport?: StdioClientTransport
   private options: McpTestClientOptions
+
+  private serverPort: number | null = null
 
   constructor(options: McpTestClientOptions) {
     this.options = options
@@ -38,8 +40,12 @@ export class McpTestClient {
    * Start the MCP server with the given command line arguments
    * @param args Additional arguments to pass to the server
    */
-  async connect(args: string[] = []): Promise<void> {
+  async connect(args: string[] = []): Promise<number> {
     // Create a new transport with the specified args
+    const portArgIndex = args.findIndex(arg => arg === '--port')
+    if (portArgIndex === -1) {
+      args.push('--port', '0') // Default to dynamic port allocation
+    }
 
     console.log('Starting MCP server with args:', [
       this.options.cliEntryPoint,
@@ -48,20 +54,29 @@ export class McpTestClient {
 
     this.transport = new StdioClientTransport({
       command: 'node',
-      args: [this.options.cliEntryPoint, ...args], // Use the provided entry point
+      args: [this.options.cliEntryPoint, ...args],
     })
 
     // Connect the client to the transport
     await this.client.connect(this.transport)
     console.log('Connected to MCP server')
+
+    // Port information isn't available directly from stdio transport
+    this.serverPort = null
+
+    return this.serverPort || 0
   }
 
   /**
    * Connect to the server with "server" as the first argument
    * @param args Additional arguments to pass to the server
    */
-  async connectServer(args: string[] = []): Promise<void> {
+  async connectServer(args: string[] = []): Promise<number> {
     return this.connect(['server', ...args])
+  }
+
+  getPort(): number | null {
+    return this.serverPort
   }
 
   /**
