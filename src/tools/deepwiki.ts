@@ -1,15 +1,13 @@
 import type { z } from 'zod'
 import type {
   ErrorEnvelope,
-  FetchSuccess,
-  TProgressEvent,
 } from '../schemas/deepwiki'
 import type { McpToolContext } from '../types'
 import { htmlToMarkdown } from '../converter/htmlToMarkdown'
-import { resolveRepo } from '../utils/resolveRepoFetch'
 import { crawl } from '../lib/httpCrawler'
-import { extractKeyword } from '../utils/extractKeyword'
 import { FetchRequest } from '../schemas/deepwiki'
+import { extractKeyword } from '../utils/extractKeyword'
+import { resolveRepo } from '../utils/resolveRepoFetch'
 
 export function deepwikiTool({ mcp }: McpToolContext) {
   mcp.tool(
@@ -58,7 +56,8 @@ export function deepwikiTool({ mcp }: McpToolContext) {
               try {
                 const repo = await resolveRepo(extracted)
                 url = repo
-              } catch {
+              }
+              catch {
                 url = `defaultuser/${extracted}`
               }
             }

@@ -1,5 +1,4 @@
 import type { ModeEnum } from '../schemas/deepwiki'
-import { fromHtml } from 'hast-util-from-html'
 import { visit } from 'unist-util-visit'
 
 interface Opts {

@@ -1,5 +1,4 @@
-import { once } from 'node:events'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
